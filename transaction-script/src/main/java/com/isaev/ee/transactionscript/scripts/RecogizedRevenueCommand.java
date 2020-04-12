@@ -8,6 +8,8 @@ import java.time.LocalDate;
 
 public class RecogizedRevenueCommand implements TransactionScriptCommand {
 
+    private static final String USD_CURRENCY_CODE = "USD";
+
     private int contractId;
     private LocalDate asOf;
 
@@ -27,7 +29,7 @@ public class RecogizedRevenueCommand implements TransactionScriptCommand {
     }
 
     public Money recognizedRevenue() {
-        Money result = Money.of(0, "USD");
+        Money result = Money.of(0, USD_CURRENCY_CODE);
         try {
             var revenueRecognition = REVENUE_RECOGNITION_JDBC_GATEWAY.findByContractIdOnDate(contractId, asOf);
             while (revenueRecognition.next()) {

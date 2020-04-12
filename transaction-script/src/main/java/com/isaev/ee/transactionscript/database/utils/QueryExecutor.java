@@ -1,5 +1,7 @@
 package com.isaev.ee.transactionscript.database.utils;
 
+import org.apache.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -7,16 +9,14 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import org.apache.log4j.Logger;
-
 public class QueryExecutor {
 
-    private static final String PATH_TO_CREATE_USER_QUERY = "src/main/resources/create-user.sql";
-    private static final String PATH_TO_CREATE_DB_QUERY = "src/main/resources/create-db-products.sql";
-    private static final String PATH_TO_DROP_DB_QUERY = "src/main/resources/drop-db-products.sql";
-    private static final String PATH_TO_CREATE_TABLE_PRODUCTS_QUERY = "src/main/resources/create-table-products.sql";
-    private static final String PATH_TO_CREATE_TABLE_CONTRACTS_QUERY = "src/main/resources/create-table-contracts.sql";
-    private static final String PATH_TO_CREATE_TABLE_REVENUE_RECOGNITIONS_QUERY = "src/main/resources/create-table-revenue-recognitions.sql";
+    private static final String PATH_TO_CREATE_USER_QUERY = "/create-user.sql";
+    private static final String PATH_TO_CREATE_DB_QUERY = "/create-db-transaction-script.sql";
+    private static final String PATH_TO_DROP_DB_QUERY = "/drop-db-products.sql";
+    private static final String PATH_TO_CREATE_TABLE_PRODUCTS_QUERY = "/create-table-products.sql";
+    private static final String PATH_TO_CREATE_TABLE_CONTRACTS_QUERY = "/create-table-contracts.sql";
+    private static final String PATH_TO_CREATE_TABLE_REVENUE_RECOGNITIONS_QUERY = "/create-table-revenue-recognition.sql";
 
     private static final String UTF8_ENCODING = "UTF-8";
 
@@ -68,7 +68,7 @@ public class QueryExecutor {
 
     private static String computeQueryText(String filePath) {
 
-        try (FileInputStream inputFile = new FileInputStream(filePath)) {
+        try (FileInputStream inputFile = new FileInputStream(QueryExecutor.class.getResource(filePath).getFile())) {
             return computeQueryFileContent(inputFile, UTF8_ENCODING);
         } catch (IOException e) {
             logger.error(String.format("Cannot read the query text file: %s", filePath), e);

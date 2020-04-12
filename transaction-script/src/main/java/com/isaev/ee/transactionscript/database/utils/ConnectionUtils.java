@@ -1,5 +1,8 @@
 package com.isaev.ee.transactionscript.database.utils;
 
+import com.isaev.ee.transactionscript.database.exceptions.NoDatabasePropertiesFileException;
+import org.apache.log4j.Logger;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,13 +12,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import com.isaev.ee.transactionscript.database.exceptions.NoDatabasePropertiesFileException;
-import org.apache.log4j.Logger;
-
 
 public class ConnectionUtils {
 
-    private static final String PROPERTIES_FILE_PATH = "src/main/resources/db.properties";
+    private static final String PROPERTIES_FILE_PATH = "/db.properties";
     private static final String URL_PROPERTY_NAME = "db.url";
     private static final String USER_PROPERTY_NAME = "db.user";
     private static final String PASSWORD_PROPERTY_NAME = "db.password";
@@ -31,7 +31,7 @@ public class ConnectionUtils {
         Properties properties = new Properties();
 
         try {
-            InputStream inputProperties = new FileInputStream(propertiesFilePath);
+            InputStream inputProperties = new FileInputStream(ConnectionUtils.class.getResource(propertiesFilePath).getFile());
             properties.load(inputProperties);
 
         } catch (IOException e) {
