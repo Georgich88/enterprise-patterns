@@ -38,7 +38,7 @@ public class RecognizedRevenueCommand implements TransactionScriptCommand {
      *
      * @return overall revenue amount
      */
-    public Money recognizedRevenue() {
+    protected Money recognizedRevenue() {
 
         Money result = Money.of(0, USD_CURRENCY_CODE);
 

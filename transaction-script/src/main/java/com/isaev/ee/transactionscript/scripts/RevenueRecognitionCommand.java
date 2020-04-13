@@ -14,7 +14,7 @@ import java.time.LocalDate;
 
 public class RevenueRecognitionCommand implements TransactionScriptCommand {
 
-    public static final String MESSAGE_TEMPLATE_CANNOT_FIND_CONTRACT = "Cannot find contract by ID: %s";
+    private static final String MESSAGE_TEMPLATE_CANNOT_FIND_CONTRACT = "Cannot find contract by ID: %s";
     private static final ContractJdbcGateway CONTRACT_JDBC_GATEWAY = new ContractJdbcGateway();
     private static final RevenueRecognitionJdbcGateway REVENUE_RECOGNITION_JDBC_GATEWAY = new RevenueRecognitionJdbcGateway();
     private static final String WORD_PROCESSORS_CONTRACT_TYPE = "W";
@@ -50,11 +50,11 @@ public class RevenueRecognitionCommand implements TransactionScriptCommand {
         }
     }
 
-    protected PreparedStatement getPreparedStatementFindContractById(Connection connection) throws SQLException {
+    private PreparedStatement getPreparedStatementFindContractById(Connection connection) throws SQLException {
         return CONTRACT_JDBC_GATEWAY.getPreparedStatementFindById(connection, contractId);
     }
 
-    protected ResultSet retrieveContract(PreparedStatement statement) throws SQLException {
+    private ResultSet retrieveContract(PreparedStatement statement) throws SQLException {
         ResultSet contract = statement.executeQuery();
         contract.next();
         return contract;
@@ -79,19 +79,19 @@ public class RevenueRecognitionCommand implements TransactionScriptCommand {
         recognizeContractRevenueOnDate(quotient.add(reminder), recognitionDate.plusDays(thirdThreshold));
     }
 
-    protected void recognizeContractRevenueOnDate(Money totalRevenue, LocalDate recognitionDate) {
+    private void recognizeContractRevenueOnDate(Money totalRevenue, LocalDate recognitionDate) {
         REVENUE_RECOGNITION_JDBC_GATEWAY.save(contractId, recognitionDate, totalRevenue.getNumberStripped());
     }
 
-    protected String contractType(ResultSet contracts) throws SQLException {
+    private String contractType(ResultSet contracts) throws SQLException {
         return contracts.getString(TYPE_FIELD_NAME);
     }
 
-    protected LocalDate contractDateSigned(ResultSet contracts) throws SQLException {
+    private LocalDate contractDateSigned(ResultSet contracts) throws SQLException {
         return contracts.getDate(DATE_SIGNED_FIELD_NAME).toLocalDate();
     }
 
-    protected Money contractTotalRevenue(ResultSet contract) throws SQLException {
+    private Money contractTotalRevenue(ResultSet contract) throws SQLException {
         return Money.of(contract.getBigDecimal(REVENUE_FIELD_NAME), USD_CURRENCY_CODE);
     }
 }
