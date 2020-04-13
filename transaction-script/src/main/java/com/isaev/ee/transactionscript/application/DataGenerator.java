@@ -21,15 +21,21 @@ public class DataGenerator {
     }
 
 
+    /**
+     * Generates default products: word processors, databases and spreadsheets.
+     */
     public void generateProducts() {
-
         var productJdbcGateway = new ProductJdbcGateway();
         productJdbcGateway.save(0, "word processors", "W");
         productJdbcGateway.save(1, "databases,", "D");
         productJdbcGateway.save(2, "spreadsheets", "S");
-
     }
 
+    /**
+     * Generate sample contracts
+     *
+     * @param number - number of contracts to generate
+     */
     public void generateContracts(int number) {
 
         var contractJdbcGateway = new ContractJdbcGateway();
@@ -44,20 +50,18 @@ public class DataGenerator {
     }
 
     private int generateRandomNumberInRange(int min, int max) {
-
         return randomNumberGenerator
                 .ints(min, (max + 1))
                 .limit(1)
                 .findFirst()
                 .getAsInt();
-
     }
 
-    private LocalDate generateRandomDate(){
+    private LocalDate generateRandomDate() {
         LocalDate start = LocalDate.of(2020, Month.JANUARY, 1);
         long days = ChronoUnit.DAYS.between(start, LocalDate.now());
         LocalDate randomDate = start.plusDays(randomNumberGenerator.nextInt((int) days + 1));
-        return  randomDate;
+        return randomDate;
     }
 
 }

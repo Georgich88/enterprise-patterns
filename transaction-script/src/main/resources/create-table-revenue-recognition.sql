@@ -8,7 +8,7 @@ DROP SEQUENCE IF EXISTS revenue_recognition_id_seq;
 
 CREATE SEQUENCE revenue_recognition_id_seq;
 
-CREATE TABLE public.students
+CREATE TABLE public.revenue_recognition
 (
     revenue_recognition_id integer NOT NULL DEFAULT nextval('revenue_recognition_id_seq'),
     contract_id integer,

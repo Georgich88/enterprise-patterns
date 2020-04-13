@@ -15,6 +15,7 @@ import java.util.Properties;
 
 public class ConnectionUtils {
 
+    public static final String MESSAGE_CANNOT_READ_PROPERTIES_FILE = "Cannot read properties file";
     private static final String PROPERTIES_FILE_PATH = "/db.properties";
     private static final String URL_PROPERTY_NAME = "db.url";
     private static final String USER_PROPERTY_NAME = "db.user";
@@ -29,26 +30,23 @@ public class ConnectionUtils {
     public static Connection getConnection(String propertiesFilePath) throws SQLException, NoDatabasePropertiesFileException {
 
         Properties properties = new Properties();
-
         try {
             InputStream inputProperties = new FileInputStream(ConnectionUtils.class.getResource(propertiesFilePath).getFile());
             properties.load(inputProperties);
 
         } catch (IOException e) {
-            logger.error("Cannot read properties file", e);
-            throw new NoDatabasePropertiesFileException("Cannot read properties file", e);
+            logger.error(MESSAGE_CANNOT_READ_PROPERTIES_FILE, e);
+            throw new NoDatabasePropertiesFileException(MESSAGE_CANNOT_READ_PROPERTIES_FILE, e);
         }
-
         Driver driver = new org.postgresql.Driver();
         DriverManager.deregisterDriver(driver);
-
         String url = properties.getProperty(URL_PROPERTY_NAME);
         String user = properties.getProperty(USER_PROPERTY_NAME);
         String password = properties.getProperty(PASSWORD_PROPERTY_NAME);
-
         return DriverManager.getConnection(url, user, password);
 
     }
+
 
 
 
