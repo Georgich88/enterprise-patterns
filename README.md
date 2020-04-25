@@ -7,6 +7,10 @@ Simple application that illustrates Simpe factory design pattern.
 
 ## Domain Logic Patterns
 
+**Table Module**
+A single instance that handles the business logic for all rows in a database table or view.
+
 **Transaction Script**
 Organizes business logic by procedures; each procedure handles a single request.
 ![Using commands for Transaction Script](/transaction-script/src/main/resources/revenue-recognition-transaction-script-uml.PNG)
+
