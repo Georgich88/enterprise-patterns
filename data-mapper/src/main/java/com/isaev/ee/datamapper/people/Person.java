@@ -1,7 +1,5 @@
 package com.isaev.ee.datamapper.people;
 
-import org.apache.log4j.Logger;
-
 import java.util.StringJoiner;
 
 public class Person {
@@ -11,16 +9,7 @@ public class Person {
     private String lastName;
     private String email;
 
-    private final static Logger logger = Logger.getLogger(Person.class);
-
     // Constructors
-
-    public Person(int id) {
-        this.id = id;
-        this.firstName = "";
-        this.lastName = "";
-        this.email = "";
-    }
 
     public Person(int id, String firstName, String lastName, String email) {
         this.id = id;
