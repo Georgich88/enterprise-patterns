@@ -19,3 +19,15 @@ Organizes business logic by procedures; each procedure handles a single request.
 **Active Record**
 A simple, even simplistic, example to show how the bones of Active Record work.
 A basic Person class with fields: id:int, firstName:String, lastName:String, email:String
+
+**Data mapper**
+Data Mapper for a person class.   
+Person class fields:
+- id: int
+- firstName: String
+- lastName: String
+- email: String    
+
+Tables:
+- Persons (Id: INT, FIRST_NAME: STR, LAST_NAME: STR, MAIL_ID: FK - EMAIL)
+- EMAILS (ID: INT, MAIL STR)
