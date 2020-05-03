@@ -4,7 +4,19 @@ import java.util.Deque;
 
 public interface PooledResource<T> extends Comparable<PooledResource<T>> {
 
-    // Accessors
+    // State changing methods
+
+    boolean startReleaseTest();
+
+    boolean endReleaseTest(Deque<PooledResource<T>> idleQueue);
+
+    boolean allocate();
+
+    boolean deallocate();
+
+    PooledResourceState getState();
+
+    // Getters and setters
 
     T getResource();
 
@@ -22,19 +34,7 @@ public interface PooledResource<T> extends Comparable<PooledResource<T>> {
 
     long getLastUsedTime();
 
-    // State changing methods
-
-    boolean startReleaseTest();
-
-    boolean endReleaseTest(Deque<PooledResource<T>> idleQueue);
-
-    boolean allocate();
-
-    boolean deallocate();
-
-    PooledResourceState getState();
-
-    // Inherited methods
+    // Object inherited methods
 
     @Override
     int compareTo(PooledResource<T> other);

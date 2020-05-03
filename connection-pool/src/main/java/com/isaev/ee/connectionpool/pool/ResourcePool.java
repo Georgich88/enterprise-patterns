@@ -9,7 +9,7 @@ import java.util.NoSuchElementException;
  */
 public interface ResourcePool<T> {
 
-    void addResource() throws Exception, IllegalAccessError, UnsupportedOperationException;
+    void addResource() throws Exception, IllegalAccessError;
 
     default void addResources(int number) throws Exception {
         for (int i = 0; i < number; i++) {
@@ -40,7 +40,7 @@ public interface ResourcePool<T> {
     /**
      * Closes the pool, and free any resources associated with it.
      */
-    void close();
+    void close() throws Exception;
 
     /**
      * Returns the number of resources currently borrowed from the pool.
@@ -56,14 +56,6 @@ public interface ResourcePool<T> {
      * @return the number of resources currently idle in this pool.
      */
     int getIdleNumber();
-
-    /**
-     * Releases an resource from the pool
-     *
-     * @param resource
-     * @throws Exception
-     */
-    void releaseResource(T resource) throws Exception;
 
     void returnResource(T resource) throws Exception;
 }
