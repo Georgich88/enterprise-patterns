@@ -6,6 +6,11 @@ import com.isaev.ee.connectionpool.pool.PooledResourceState;
 import java.sql.Connection;
 import java.util.Deque;
 
+/**
+ * The simple wrapper to track additional information for pooled objects.
+ *
+ * @author Georgy Isaev
+ */
 public class PooledConnection implements PooledResource<Connection> {
 
     private final Connection connection;
@@ -33,22 +38,18 @@ public class PooledConnection implements PooledResource<Connection> {
 
     @Override
     public long getActiveTimeMillis() {
-        // Take copies to avoid threading issues
-        final long rTime = lastReturnTime;
-        final long bTime = lastBorrowTime;
+        final long returnTime = lastReturnTime;
+        final long borrowTime = lastBorrowTime;
 
-        if (rTime > bTime) {
-            return rTime - bTime;
+        if (returnTime > borrowTime) {
+            return returnTime - borrowTime;
         }
-        return System.currentTimeMillis() - bTime;
+        return System.currentTimeMillis() - borrowTime;
     }
 
     @Override
     public long getIdleTimeMillis() {
         final long elapsed = System.currentTimeMillis() - lastReturnTime;
-        // elapsed may be negative if:
-        // - another thread updates lastReturnTime during the calculation window
-        // - System.currentTimeMillis() is not monotonic (e.g. system time is set back)
         return elapsed >= 0 ? elapsed : 0;
     }
 
@@ -78,8 +79,8 @@ public class PooledConnection implements PooledResource<Connection> {
         if (lastActiveDiff == 0) {
             return System.identityHashCode(this) - System.identityHashCode(other);
         }
-        // handle int overflow
-        return (int)Math.min(Math.max(lastActiveDiff, Integer.MIN_VALUE), Integer.MAX_VALUE);
+        // Handles the integer overflow
+        return (int) Math.min(Math.max(lastActiveDiff, Integer.MIN_VALUE), Integer.MAX_VALUE);
     }
 
     @Override
@@ -113,11 +114,6 @@ public class PooledConnection implements PooledResource<Connection> {
         return false;
     }
 
-    /**
-     * Allocates the object.
-     *
-     * @return {@code true} if the original state was {@link PooledResourceState#IDLE IDLE}
-     */
     @Override
     public synchronized boolean allocate() {
         if (state == PooledResourceState.IDLE) {
@@ -145,15 +141,14 @@ public class PooledConnection implements PooledResource<Connection> {
 
 
     /**
-     * Returns the state of this object.
+     * Returns the state of this pooled object.
+     *
      * @return state
      */
     @Override
     public synchronized PooledResourceState getState() {
         return state;
     }
-
-
 
 
 }

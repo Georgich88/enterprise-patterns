@@ -9,12 +9,27 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 
+/**
+ * Simple driver manager connection factory.
+ *
+ * @author Georgy Isaev
+ */
 public class DriverManagerConnectionFactory implements PooledResourceFactory<Connection> {
+
+    // Messages constants
+
+    public static final String MESSAGE_ERROR_CONNECTION_IS_CLOSED = "Connection is closed and cannot be activated.";
+
+    // Internal configuration attributes
+
+    private final String connectionUri;
+    private String userName;
+    private String userPassword;
+    private Properties properties;
 
     static {
         DriverManager.getDrivers();
     }
-
 
     public DriverManagerConnectionFactory(final String connectionUri) {
         this.connectionUri = connectionUri;
@@ -49,22 +64,27 @@ public class DriverManagerConnectionFactory implements PooledResourceFactory<Con
     }
 
     @Override
-    public void destroyObject(PooledResource<Connection> p) throws Exception {
-
+    public void destroyObject(PooledResource<Connection> resource) throws Exception {
+        Connection connection = resource.getResource();
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     @Override
-    public void activateObject(PooledResource<Connection> p) throws Exception {
-
+    public void activateObject(PooledResource<Connection> resource) throws Exception {
+        Connection connection = resource.getResource();
+        if (connection != null && connection.isClosed()) {
+            throw new IllegalStateException(MESSAGE_ERROR_CONNECTION_IS_CLOSED);
+        }
     }
 
     @Override
-    public void deactivateObject(PooledResource<Connection> p) throws Exception {
-
+    public void deactivateObject(PooledResource<Connection> resource) throws Exception {
+        Connection connection = resource.getResource();
+        if (connection != null) {
+            connection.close();
+        }
     }
 
-    private final String connectionUri;
-    private String userName;
-    private String userPassword;
-    private Properties properties;
 }
