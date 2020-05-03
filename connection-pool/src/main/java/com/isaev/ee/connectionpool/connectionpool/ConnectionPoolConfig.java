@@ -1,5 +1,11 @@
 package com.isaev.ee.connectionpool.connectionpool;
 
+
+/**
+ * Simple structure that encapsulates the configuration settings for {@link ConnectionPool}.
+ *
+ * @param <T> type of connection.
+ */
 public class ConnectionPoolConfig<T> {
 
     /**
@@ -32,9 +38,8 @@ public class ConnectionPoolConfig<T> {
      * Get the value for the {@code maxTotal} configuration attribute
      * for pools created with this configuration instance.
      *
-     * @return  The current setting of {@code maxTotal} for this
-     *          configuration instance
-     *
+     * @return The current setting of {@code maxTotal} for this
+     * configuration instance
      */
     public int getMaxTotal() {
         return maxTotal;
@@ -45,8 +50,7 @@ public class ConnectionPoolConfig<T> {
      * pools created with this configuration instance.
      *
      * @param maxTotal The new setting of {@code maxTotal}
-     *        for this configuration instance
-     *
+     *                 for this configuration instance
      */
     public void setMaxTotal(final int maxTotal) {
         this.maxTotal = maxTotal;
@@ -57,9 +61,8 @@ public class ConnectionPoolConfig<T> {
      * Get the value for the {@code maxIdle} configuration attribute
      * for pools created with this configuration instance.
      *
-     * @return  The current setting of {@code maxIdle} for this
-     *          configuration instance
-     *
+     * @return The current setting of {@code maxIdle} for this
+     * configuration instance
      */
     public int getMaxIdle() {
         return maxIdle;
@@ -70,8 +73,7 @@ public class ConnectionPoolConfig<T> {
      * pools created with this configuration instance.
      *
      * @param maxIdle The new setting of {@code maxIdle}
-     *        for this configuration instance
-     *
+     *                for this configuration instance
      */
     public void setMaxIdle(final int maxIdle) {
         this.maxIdle = maxIdle;
@@ -82,9 +84,8 @@ public class ConnectionPoolConfig<T> {
      * Get the value for the {@code minIdle} configuration attribute
      * for pools created with this configuration instance.
      *
-     * @return  The current setting of {@code minIdle} for this
-     *          configuration instance
-     *
+     * @return The current setting of {@code minIdle} for this
+     * configuration instance
      */
     public int getMinIdle() {
         return minIdle;
@@ -95,21 +96,10 @@ public class ConnectionPoolConfig<T> {
      * pools created with this configuration instance.
      *
      * @param minIdle The new setting of {@code minIdle}
-     *        for this configuration instance
-     *
+     *                for this configuration instance
      */
     public void setMinIdle(final int minIdle) {
         this.minIdle = minIdle;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public ConnectionPoolConfig<T> clone() {
-        try {
-            return (ConnectionPoolConfig<T>) super.clone();
-        } catch (final CloneNotSupportedException e) {
-            throw new AssertionError(); // Can't happen
-        }
     }
 
 }

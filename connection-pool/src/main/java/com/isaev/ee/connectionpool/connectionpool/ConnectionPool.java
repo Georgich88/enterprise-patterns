@@ -3,14 +3,28 @@ package com.isaev.ee.connectionpool.connectionpool;
 import com.isaev.ee.connectionpool.pool.PooledResource;
 import com.isaev.ee.connectionpool.pool.PooledResourceFactory;
 import com.isaev.ee.connectionpool.pool.ResourcePool;
+import org.apache.log4j.Logger;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Simple connection pool implementation
+ *
+ * @param <T> type of connection in the pool
+ */
 public class ConnectionPool<T> implements ResourcePool<T> {
+
+    // Message constants
+
+    public static final String MESSAGE_FACTORY_IS_NOT_INITIALIZED = "Cannot add resource. Factory is not initialized.";
+    public static final String MESSAGE_ERROR_UNABLE_TO_ACTIVATE_RESOURCE = "Unable to activate resource";
+    public static final String MESSAGE_ERROR_TIMEOUT_WAITING_IDLE = "Timeout waiting for idle resource";
+    public static final String MESSAGE_ERROR_RETURNED_RESOURCE_NOT_IN_POOL = "Returned resource not currently part of this pool";
 
     // Constructors
 
@@ -18,8 +32,7 @@ public class ConnectionPool<T> implements ResourcePool<T> {
         this(factory, new ConnectionPoolConfig<T>());
     }
 
-    public ConnectionPool(final PooledResourceFactory<T> factory,
-                          final ConnectionPoolConfig<T> config) {
+    public ConnectionPool(final PooledResourceFactory<T> factory, final ConnectionPoolConfig<T> config) {
 
         if (factory == null) {
             throw new IllegalArgumentException("Factory may not be null");
@@ -30,6 +43,7 @@ public class ConnectionPool<T> implements ResourcePool<T> {
     }
 
     // Configuration attributes
+
     private volatile int maxTotal = ConnectionPoolConfig.DEFAULT_MAX_TOTAL;
     private volatile int maxIdle = ConnectionPoolConfig.DEFAULT_MAX_IDLE;
     private volatile int minIdle = ConnectionPoolConfig.DEFAULT_MIN_IDLE;
@@ -37,107 +51,105 @@ public class ConnectionPool<T> implements ResourcePool<T> {
     private final PooledResourceFactory<T> factory;
 
     // Internal attributes
+
     private final Map<IdentityWrapper<T>, PooledResource<T>> allObjects = new ConcurrentHashMap<>();
     private final AtomicLong createCount = new AtomicLong(0);
     private final AtomicLong destroyedCount = new AtomicLong(0);
     private long createResourceCount = 0;
     private final Object createResourceCountLock = new Object();
+    private volatile boolean closed = false;
+    private final Object closeLock = new Object();
     private final LinkedBlockingDeque<PooledResource<T>> idleObjects;
 
+    private final static Logger logger = Logger.getLogger(ConnectionPool.class);
 
-    public void setConfig(final ConnectionPoolConfig<T> config) {
-        //super.setConfig(conf);
-        setMaxIdle(config.getMaxIdle());
-        setMinIdle(config.getMinIdle());
-        setMaxTotal(config.getMaxTotal());
-    }
-
-    public int getMaxTotal() {
-        return maxTotal;
-    }
-
-    public void setMaxTotal(int maxTotal) {
-        this.maxTotal = maxTotal;
-    }
-
-    public int getMaxIdle() {
-        return maxIdle;
-    }
-
-    public void setMaxIdle(int maxIdle) {
-        this.maxIdle = maxIdle;
-    }
-
-    public int getMinIdle() {
-        return minIdle;
-    }
-
-    public void setMinIdle(int minIdle) {
-        this.minIdle = minIdle;
-    }
-
-    public long getMaxWaitMillis() {
-        return maxWaitMillis;
-    }
-
-    public void setMaxWaitMillis(long maxWaitMillis) {
-        this.maxWaitMillis = maxWaitMillis;
-    }
-
-    // Resource pool methods.
+    // Resource pool methods
 
     @Override
-    public void addResource() throws Exception, IllegalAccessError, UnsupportedOperationException {
+    public void addResource() throws Exception, IllegalAccessError {
         if (factory == null) {
-            throw new IllegalArgumentException("Cannot add resource. Factory is not initialized.");
+            logger.error(MESSAGE_FACTORY_IS_NOT_INITIALIZED);
+            throw new IllegalArgumentException(MESSAGE_FACTORY_IS_NOT_INITIALIZED);
         }
         PooledResource<T> resource = create();
         addIdleResource(resource);
     }
 
     @Override
-    public T borrowResource() throws Exception, NoSuchElementException, IllegalStateException {
-        return null;
+    public T borrowResource() throws Exception {
+        return borrowResource(getMaxWaitMillis());
     }
 
     @Override
-    public void clear() throws Exception, UnsupportedOperationException {
+    public void clear() throws Exception {
 
+        PooledResource<T> resource = idleObjects.poll();
+
+        while (resource != null) {
+            try {
+                destroy(resource);
+            } catch (final Exception e) {
+                logger.error(e);
+            }
+            resource = idleObjects.poll();
+        }
     }
 
     @Override
-    public void close() {
-
+    public void close() throws Exception {
+        if (isClosed()) return;
+        synchronized (closeLock) {
+            if (isClosed()) {
+                return;
+            }
+            closed = true;
+            clear();
+        }
     }
 
     @Override
     public int getActiveNumber() {
-        return 0;
+        return allObjects.size() - idleObjects.size();
     }
 
     @Override
     public int getIdleNumber() {
-        return 0;
-    }
-
-    @Override
-    public void releaseResource(T resource) throws Exception {
-
+        return idleObjects.size();
     }
 
     @Override
     public void returnResource(T resource) throws Exception {
+
         final PooledResource<T> pooledResource = allObjects.get(new IdentityWrapper<>(resource));
         if (pooledResource == null) {
-            throw new IllegalStateException("Invalidated object not currently part of this pool");
+            throw new IllegalStateException(MESSAGE_ERROR_RETURNED_RESOURCE_NOT_IN_POOL);
         }
-        synchronized (pooledResource) {
-            destroy(pooledResource);
+        final int maxIdleSave = getMaxIdle();
+        if (isClosed() || maxIdleSave > -1 && maxIdleSave <= idleObjects.size()) {
+            try {
+                destroy(pooledResource);
+            } catch (final Exception e) {
+                logger.error(e);
+            }
+            try {
+                ensureIdle(1, false);
+            } catch (final Exception e) {
+                logger.error(e);
+            }
+        } else {
+            idleObjects.addFirst(pooledResource);
         }
-        ensureIdle(1, false);
+
+        if (isClosed()) {
+            clear();
+        }
     }
 
-    //
+    // Connection pool specific methods
+
+    public final boolean isClosed() {
+        return closed;
+    }
 
     private void addIdleResource(final PooledResource<T> resource) throws Exception {
         if (resource != null) {
@@ -146,11 +158,10 @@ public class ConnectionPool<T> implements ResourcePool<T> {
         }
     }
 
-
     private PooledResource<T> create() throws Exception {
 
         int localMaxTotal = getMaxTotal();
-        // This simplifies the code later in this method
+
         if (localMaxTotal < 0) {
             localMaxTotal = Integer.MAX_VALUE;
         }
@@ -168,29 +179,18 @@ public class ConnectionPool<T> implements ResourcePool<T> {
             synchronized (createResourceCountLock) {
                 final long newCreateCount = createCount.incrementAndGet();
                 if (newCreateCount > localMaxTotal) {
-                    // The pool is currently at capacity or in the process of
-                    // making enough new objects to take it to capacity.
                     createCount.decrementAndGet();
                     if (createResourceCount == 0) {
-                        // There are no createReso() calls in progress so the
-                        // pool is at capacity. Do not attempt to create a new
-                        // object. Return and wait for an object to be returned
                         create = Boolean.FALSE;
                     } else {
-                        // There are makeObject() calls in progress that might
-                        // bring the pool to capacity. Those calls might also
-                        // fail so wait until they complete and then re-test if
-                        // the pool is at capacity or not.
                         createResourceCountLock.wait(localMaxWaitTimeMillis);
                     }
                 } else {
-                    // The pool is not at capacity. Create a new object.
                     createResourceCount++;
                     create = Boolean.TRUE;
                 }
             }
 
-            // Do not block more if maxWaitTimeMillis is set.
             if (create == null &&
                     (localMaxWaitTimeMillis > 0
                             && System.currentTimeMillis() - localStartTimeMillis >= localMaxWaitTimeMillis)) {
@@ -231,40 +231,122 @@ public class ConnectionPool<T> implements ResourcePool<T> {
         }
     }
 
-
     private void ensureIdle(final int idleCount, final boolean always) throws Exception {
-        // TODO: impelment isClosed functionality
-        //if (idleCount < 1 || isClosed() || (!always && !idleObjects.hasTakeWaiters())) {
-        //    return;
-        //}
-
+        if (isClosed()) return;
         while (idleObjects.size() < idleCount) {
             final PooledResource<T> p = create();
             if (p == null) {
-                // Can't create objects, no reason to think another call to
-                // create will work. Give up.
                 break;
             }
             idleObjects.addFirst(p);
         }
-        //if (isClosed()) {
+        if (isClosed()) {
             // Pool closed while object was being added to idle objects.
             // Make sure the returned object is destroyed rather than left
             // in the idle object pool (which would effectively be a leak)
-            //clear();
-        //}
+            clear();
+        }
+    }
+
+    public T borrowResource(final long borrowMaxWaitMillis) throws Exception {
+
+        PooledResource<T> resource = null;
+
+        boolean create;
+
+        while (resource == null) {
+            create = false;
+            resource = idleObjects.pollFirst();
+            if (resource == null) {
+                resource = create();
+                if (resource != null) {
+                    create = true;
+                }
+            }
+
+            if (resource == null) {
+                if (borrowMaxWaitMillis < 0) {
+                    resource = idleObjects.takeFirst();
+                } else {
+                    resource = idleObjects.pollFirst(borrowMaxWaitMillis, TimeUnit.MILLISECONDS);
+                }
+            }
+            if (resource == null) {
+                throw new NoSuchElementException(MESSAGE_ERROR_TIMEOUT_WAITING_IDLE);
+            }
+
+            if (!resource.allocate()) {
+                resource = null;
+            }
+
+            if (resource != null) {
+                try {
+                    factory.activateObject(resource);
+                } catch (final Exception e) {
+                    try {
+                        destroy(resource);
+                    } catch (final Exception e1) {
+                    }
+                    resource = null;
+                    if (create) {
+                        final NoSuchElementException exception = new NoSuchElementException(MESSAGE_ERROR_UNABLE_TO_ACTIVATE_RESOURCE);
+                        exception.initCause(e);
+                        throw exception;
+                    }
+                }
+            }
+        }
+
+        return resource.getResource();
+    }
+
+
+    // Getters and setters
+
+    public void setConfig(final ConnectionPoolConfig<T> config) {
+        setMaxIdle(config.getMaxIdle());
+        setMinIdle(config.getMinIdle());
+        setMaxTotal(config.getMaxTotal());
+    }
+
+    public int getMaxTotal() {
+        return maxTotal;
+    }
+
+    public void setMaxTotal(int maxTotal) {
+        this.maxTotal = maxTotal;
+    }
+
+    public int getMaxIdle() {
+        return maxIdle;
+    }
+
+    public void setMaxIdle(int maxIdle) {
+        this.maxIdle = maxIdle;
+    }
+
+    public int getMinIdle() {
+        return minIdle;
+    }
+
+    public void setMinIdle(int minIdle) {
+        this.minIdle = minIdle;
+    }
+
+    public long getMaxWaitMillis() {
+        return maxWaitMillis;
+    }
+
+    public void setMaxWaitMillis(long maxWaitMillis) {
+        this.maxWaitMillis = maxWaitMillis;
     }
 
     // Inner classes
 
     /**
-     * Wrapper for objects under management by the pool.
-     * <p>
-     * GenericObjectPool and GenericKeyedObjectPool maintain references to all
-     * objects under management using maps keyed on the objects. This wrapper
-     * class ensures that objects can work as hash keys.
+     * Wrapper for resources under the management by the pool.
      *
-     * @param <T> type of objects in the pool
+     * @param <T> type of connection in the pool
      */
     static class IdentityWrapper<T> {
 
