@@ -2,7 +2,9 @@ package com.isaev.ee.connectionpool.connectionpool;
 
 import com.isaev.ee.connectionpool.pool.PooledResource;
 import com.isaev.ee.connectionpool.pool.PooledResourceFactory;
+import com.isaev.ee.connectionpool.pool.PooledResourceState;
 import com.isaev.ee.connectionpool.pool.ResourcePool;
+import com.isaev.ee.connectionpool.timer.TimedResource;
 import org.apache.log4j.Logger;
 
 import java.util.Map;
@@ -48,7 +50,9 @@ public class ConnectionPool<T> implements ResourcePool<T> {
     private volatile int maxIdle = ConnectionPoolConfig.DEFAULT_MAX_IDLE;
     private volatile int minIdle = ConnectionPoolConfig.DEFAULT_MIN_IDLE;
     private volatile long maxWaitMillis = ConnectionPoolConfig.DEFAULT_MAX_WAIT_MILLIS;
+    private volatile int idleDuration = ConnectionPoolConfig.DEFAULT_IDLE_DURATION;
     private final PooledResourceFactory<T> factory;
+    private volatile boolean timedConnectionPool = false;
 
     // Internal attributes
 
@@ -147,6 +151,13 @@ public class ConnectionPool<T> implements ResourcePool<T> {
 
     // Connection pool specific methods
 
+    public void releaseResource(final PooledResource<T> resource) throws Exception {
+        if (isClosed()) return;
+        if (resource != null && resource.getState() == PooledResourceState.IDLE) {
+            destroy(resource);
+        }
+    }
+
     public final boolean isClosed() {
         return closed;
     }
@@ -204,7 +215,12 @@ public class ConnectionPool<T> implements ResourcePool<T> {
 
         final PooledResource<T> pooledResource;
         try {
-            pooledResource = factory.createObject();
+            if (isTimedConnectionPool()) {
+                pooledResource = new TimedResource<>(factory.createObject(), this);
+            } else {
+                pooledResource = factory.createObject();
+            }
+
         } catch (final Throwable e) {
             createCount.decrementAndGet();
             throw e;
@@ -307,6 +323,8 @@ public class ConnectionPool<T> implements ResourcePool<T> {
         setMaxIdle(config.getMaxIdle());
         setMinIdle(config.getMinIdle());
         setMaxTotal(config.getMaxTotal());
+        setIdleDuration(config.getIdleDuration());
+        setTimedConnectionPool(config.isTimedConnectionPool());
     }
 
     public int getMaxTotal() {
@@ -339,6 +357,22 @@ public class ConnectionPool<T> implements ResourcePool<T> {
 
     public void setMaxWaitMillis(long maxWaitMillis) {
         this.maxWaitMillis = maxWaitMillis;
+    }
+
+    public int getIdleDuration() {
+        return idleDuration;
+    }
+
+    public void setIdleDuration(int idleDuration) {
+        this.idleDuration = idleDuration;
+    }
+
+    public boolean isTimedConnectionPool() {
+        return timedConnectionPool;
+    }
+
+    public void setTimedConnectionPool(boolean timedConnectionPool) {
+        this.timedConnectionPool = timedConnectionPool;
     }
 
     // Inner classes

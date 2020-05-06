@@ -2,6 +2,7 @@ package com.isaev.ee.connectionpool.application;
 
 import com.isaev.ee.connectionpool.connectionfactory.DriverManagerConnectionFactory;
 import com.isaev.ee.connectionpool.connectionpool.ConnectionPool;
+import com.isaev.ee.connectionpool.connectionpool.ConnectionPoolConfig;
 import com.isaev.ee.connectionpool.pool.PooledResourceFactory;
 
 import java.sql.Connection;
@@ -18,13 +19,17 @@ public class Application {
     private static final String JDBC_USER = "data_mapper";
     private static final String JDBC_PASS = "123456";
 
+    private static final int DELAY = 31*1000;
+
     private static ConnectionPool<Connection> connectionPool = null;
 
     public static void setupPool() throws Exception {
 
         Class.forName(JDBC_DRIVER);
         PooledResourceFactory factory = new DriverManagerConnectionFactory(JDBC_DB_URL, JDBC_USER, JDBC_PASS);
-        connectionPool = new ConnectionPool<Connection>(factory);
+        ConnectionPoolConfig config = new ConnectionPoolConfig();
+        config.setTimedConnectionPool(true);
+        connectionPool = new ConnectionPool<Connection>(factory, config);
         connectionPool.setMaxTotal(10);
 
     }
@@ -48,6 +53,10 @@ public class Application {
         connectionPool.returnResource(connection);
         printDbStatus();
         connectionPool.clear();
+        printDbStatus();
+        connectionPool.addResource();
+        printDbStatus();
+        Thread.sleep((long) (DELAY));
         printDbStatus();
 
     }

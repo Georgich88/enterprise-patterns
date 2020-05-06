@@ -28,11 +28,20 @@ public class ConnectionPoolConfig<T> {
      */
     public static final long DEFAULT_MAX_WAIT_MILLIS = -1L;
 
+    /**
+     * The default value for the {@code idleDuration} configuration attribute.
+     */
+    public static final int DEFAULT_IDLE_DURATION = 30*1000;
+
     private int maxTotal = DEFAULT_MAX_TOTAL;
 
     private int maxIdle = DEFAULT_MAX_IDLE;
 
     private int minIdle = DEFAULT_MIN_IDLE;
+
+    private int idleDuration = DEFAULT_IDLE_DURATION;
+
+    private boolean timedConnectionPool = false;
 
     /**
      * Get the value for the {@code maxTotal} configuration attribute
@@ -102,4 +111,48 @@ public class ConnectionPoolConfig<T> {
         this.minIdle = minIdle;
     }
 
+
+    /**
+     * Get the value for the {@code idleDuration} configuration attribute
+     * for pools created with this configuration instance.
+     *
+     * @return The current setting of {@code idleDuration} for this
+     * configuration instance
+     */
+    public int getIdleDuration() {
+        return idleDuration;
+    }
+
+    /**
+     * Set the value for the {@code idleDuration} configuration attribute for
+     * pools created with this configuration instance.
+     *
+     * @param idleDuration The new setting of {@code maxIdle}
+     *                for this configuration instance
+     */
+    public void setIdleDuration(final int idleDuration) {
+        this.idleDuration = idleDuration;
+    }
+
+    /**
+     * Get the value for the {@code timedConnectionPool} configuration attribute
+     * for pools created with this configuration instance.
+     *
+     * @return The current setting of {@code timedConnectionPool} for this
+     * configuration instance
+     */
+    public boolean isTimedConnectionPool() {
+        return timedConnectionPool;
+    }
+
+    /**
+     * Set the value for the {@code timedConnectionPool} configuration attribute for
+     * pools created with this configuration instance.
+     *
+     * @param timedConnectionPool The new setting of {@code timedConnectionPool}
+     *                for this configuration instance
+     */
+    public void setTimedConnectionPool(boolean timedConnectionPool) {
+        this.timedConnectionPool = timedConnectionPool;
+    }
 }
