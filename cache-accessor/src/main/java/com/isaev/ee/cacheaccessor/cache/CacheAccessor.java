@@ -8,14 +8,14 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-public class CashAccessor implements DataAccessible {
+public class CacheAccessor implements DataAccessible {
 
     private final Set<Person> firstPeopleCache = new HashSet<>();
     private final Set<Person> lastPeopleCache = new HashSet<>();
 
     private final DataAccessible<Person> dataAccessor;
 
-    public CashAccessor(DataAccessible<Person> dataAccessor) {
+    public CacheAccessor(DataAccessible<Person> dataAccessor) {
         this.dataAccessor = dataAccessor;
     }
 
