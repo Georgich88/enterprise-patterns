@@ -2,8 +2,6 @@ package com.isaev.ee.datamapper.people;
 
 import com.isaev.ee.datamapper.database.exception.DataMapperException;
 import com.isaev.ee.datamapper.database.utils.QueryExecutor;
-import com.isaev.ee.datamapper.people.Person;
-import com.isaev.ee.datamapper.people.PersonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

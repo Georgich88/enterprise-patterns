@@ -1,6 +1,5 @@
 package com.isaev.ee.datamapper.application;
 
-import com.isaev.ee.datamapper.application.Application;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

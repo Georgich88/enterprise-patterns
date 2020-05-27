@@ -2,9 +2,9 @@ package com.isaev.ee.datamapper.application;
 
 import com.github.javafaker.Faker;
 import com.github.javafaker.Name;
+import com.isaev.ee.datamapper.database.exception.DataMapperException;
 import com.isaev.ee.datamapper.people.Person;
 import com.isaev.ee.datamapper.people.PersonMapper;
-import com.isaev.ee.datamapper.database.exception.DataMapperException;
 import org.apache.log4j.Logger;
 
 import java.util.stream.IntStream;

@@ -1,8 +1,8 @@
 package com.isaev.ee.datamapper.application;
 
-import com.isaev.ee.datamapper.people.PersonMapper;
 import com.isaev.ee.datamapper.database.exception.DataMapperException;
 import com.isaev.ee.datamapper.database.utils.QueryExecutor;
+import com.isaev.ee.datamapper.people.PersonMapper;
 import org.apache.log4j.Logger;
 
 import java.util.stream.IntStream;
