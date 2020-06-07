@@ -20,9 +20,14 @@ public class PersonToXmlTransformer implements Transformer<Person, String> {
     }
 
     public String transform() throws JsonProcessingException {
-        XmlMapper xmlMapper = new XmlMapper();
-        xmlMapper.registerModule(new JaxbAnnotationModule());
+        XmlMapper xmlMapper = getXmlMapper();
         String xmlString = xmlMapper.writeValueAsString(this.person);
         return xmlString;
+    }
+
+    private XmlMapper getXmlMapper() {
+        XmlMapper xmlMapper = new XmlMapper();
+        xmlMapper.registerModule(new JaxbAnnotationModule());
+        return xmlMapper;
     }
 }
