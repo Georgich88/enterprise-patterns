@@ -8,7 +8,7 @@ import com.isaev.ee.transformview.transformers.Transformer;
 import java.io.IOException;
 
 /**
- * Transfers a XML string to a person.
+ * Transforms a XML string to a person.
  *
  * @author Georgy Isaev
  */

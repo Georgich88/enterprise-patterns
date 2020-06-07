@@ -12,6 +12,11 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 
+/**
+ * Transforms a XML string into a XHTML string using XSL transformation template.
+ *
+ * @author Georgy Isaev
+ */
 public class XmlToXhtmlTransformer implements Transformer<String, String> {
 
     private static final String PATH_TO_STYLE_XSL = "/makehtml.xsl";

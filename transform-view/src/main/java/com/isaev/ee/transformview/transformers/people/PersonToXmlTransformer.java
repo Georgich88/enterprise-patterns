@@ -7,7 +7,7 @@ import com.isaev.ee.transformview.people.Person;
 import com.isaev.ee.transformview.transformers.Transformer;
 
 /**
- * Transfers a person to XML string.
+ * Transforms a person to XML string.
  *
  * @author Georgy Isaev
  */
